@@ -119,7 +119,7 @@ void displayWire(void)
 glPushMatrix();
 switch(direction) { 
 
-  case 0 : glTranslated(posX,posY--,posZ); break;
+  
   case 1 : glTranslated(posX,posY--,posZ++); break;
   case 2 : glTranslated(posX++,posY--,posZ); break;
   case 3 : glTranslated(posX--,posY--,posZ); break;
