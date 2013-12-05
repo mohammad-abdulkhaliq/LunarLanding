@@ -24,6 +24,10 @@ const char * MAP_FILE = "data/bigger.pgm";
 const float HEIGHT_RATIO = 1.5f;    // Ratio That The Y Is Scaled According To The X And Z (NEW)
 int eyeX = 212, eyeY = 60, eyeZ = 194, centerX = 186, centerY = 55, centerZ = 171, upX = 0, upY = 1, upZ = 0;
 
+int posX = 500, posY = 400, posZ = 500;
+
+int direction = 0;
+
 int orbitDegrees = 0;
 
 float scaleValue = 0.15f;
@@ -107,6 +111,26 @@ void InitGL (const char * mapFile)
   g_HeightMap = new Pixmap(mapFile);
 }
 
+void displayWire(void)
+{
+
+glPushMatrix();
+switch(direction) { 
+
+  case 0 : glTranslated(posX,posY--,posZ); break;
+  case 1 : glTranslated(posX,posY--,posZ++); break;
+  case 2 : glTranslated(posX++,posY--,posZ); break;
+  case 3 : glTranslated(posX--,posY--,posZ); break;
+  case 4 : glTranslated(posX,posY--,posZ--); break;
+
+  default : glTranslated(posX,posY--,posZ); break;
+}
+
+glColor3f(0, 0, 1);
+glutWireTeapot(50.0);
+glPopMatrix();
+}
+
 
 void DrawGLScene ()
 {
@@ -116,6 +140,7 @@ void DrawGLScene ()
   gluLookAt (eyeX,eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
   glRotatef(orbitDegrees, 0.f, 1.f, 0.f);/* orbit the Y axis */
   glScalef (scaleValue, scaleValue * HEIGHT_RATIO, scaleValue);
+  displayWire();
   RenderHeightMap (g_HeightMap);
 
   glutSwapBuffers();
@@ -137,7 +162,7 @@ void Keyboard (unsigned char key, int x, int y)
 {
   switch (key)
   {
-    case ' ':  
+    case 't':  
       toRender = ((toRender == GL_QUADS) ? GL_LINES : GL_QUADS);
       break;
 
@@ -168,6 +193,8 @@ void Keyboard (unsigned char key, int x, int y)
       if (stepSize < (g_HeightMap->sizeX / 2))  stepSize *= 2;
       break;
 
+   case ' ' : posY+=5; direction = 0; break;
+
    case 'w': eyeY++; centerY++; break;            //setup to use lander cooardinates
    case 'd': eyeX++; centerX++; break;
    case 'a': eyeX--; centerX--; break;
@@ -180,9 +207,29 @@ void Keyboard (unsigned char key, int x, int y)
       exit (0);
   }
 
-  glutPostRedisplay ();
+//  glutPostRedisplay ();
 }
 
+void controls(int key, int x, int y) {
+
+  int mod;
+  switch(key) {
+
+
+   case GLUT_KEY_UP : direction = 1; break;
+   case GLUT_KEY_RIGHT : direction = 2; break;
+   case GLUT_KEY_LEFT : direction = 3; break;
+   case GLUT_KEY_DOWN : direction = 4; break;
+
+    
+  }
+}
+
+
+
+void refresh(void) { 
+    glutPostRedisplay();  
+}
 
 int main (int argc, char *argv[]) 
 {
@@ -196,6 +243,8 @@ int main (int argc, char *argv[])
   glutDisplayFunc (DrawGLScene);
   glutReshapeFunc (ReSizeGLScene);
   glutKeyboardFunc (Keyboard);
+  glutSpecialFunc(controls);
+  glutIdleFunc(refresh);
 
   glutMainLoop ();
   return 0;
