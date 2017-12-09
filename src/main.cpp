@@ -125,7 +125,7 @@ switch(direction) {
   case 3 : glTranslated(posX--,posY--,posZ); break;
   case 4 : glTranslated(posX,posY--,posZ--); break;
 
-  default : glTranslated(posX,posY--,posZ); break;
+  default : glTranslated(posX,posY,posZ); break;
 }
 
 glColor3f(0, 0, 1);
@@ -200,7 +200,7 @@ void Keyboard (unsigned char key, int x, int y)
     case '}':
     case ']':
       if (stepSize < (g_HeightMap->sizeX / 2))  stepSize *= 2;
-      break;
+      break; 
 
    case ' ' : posY+=5; direction = 0; break;
 

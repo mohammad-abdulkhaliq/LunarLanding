@@ -5,12 +5,30 @@
 ** Compile Machine: MAC OS X 
  */
 
+// MAC OS X
+// #include <sstream>
+// #include <stdio.h>
+// #include <GLUT/glut.h>
 
+// FEDORA 27
+#include <cstring>
 #include <sstream>
 #include <stdio.h>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
+#include "SerialRead.h"
+
 //<<<<<<<<<<<<<<<<<<<<<<< myInit >>>>>>>>>>>>>>>>>>>>
-int moveX = 600; int moveY = 2000; int speed = 25; int g = 2; int timeR = 30; int fuel = 100; bool over = false;
+int moveX = 600; int moveY = 2000;
+int speed = 25;
+int g = 2;
+int timeR = 30;
+int fuel = 100;
+bool over = false;
+int fd = 0;
+double cX = 0;
+double cY = 0;
+const char* cPos;
+
 void myInit(void)
 {
   glClearColor(1.0,1.0,1.0,0.0); // set white background color 
@@ -19,6 +37,7 @@ void myInit(void)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluOrtho2D(0.0, 640.0, 0.0, 480.0);
+  fd = set_port();
 }
 
 void
@@ -90,20 +109,25 @@ void drawLunarLander(void){
 }
 
 void printCoords(void){
-
+  
   std::stringstream coords;
   coords << "x: " << moveX << ", y: " << moveY;
   char *o = const_cast<char*>(coords.str().c_str());
+  std::stringstream controller;
+  controller << "cx: " << cX << ", cy: " << cY;
+  char *o3 = const_cast<char*>(controller.str().c_str());
   std::stringstream time;
   time << "time remaining: " << timeR;
   char *o2 = const_cast<char*>(time.str().c_str());
   output(530,400,0.1, o);
+  output(530,380,0.1, o3);
   output(10, 390, 0.1, o2 );
 }
 
 
 void thrust(int x, int y) {
-
+  
+ 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix(); 
   glLoadIdentity();
@@ -180,24 +204,53 @@ void renderString(char string [])
   }
 }
 
+void myController(void) {
 
-
-
-
-void gravitySimulator(void) {
-
-
+    cPos = read_port(fd);
+    while(cPos == NULL) 
+      cPos = read_port(fd);
+    // printf("%s", cPos);
+    cX = readPosX(cPos);
+    cY = readPosY(cPos);
+    
+    int oX = (int) cX * 0.25;
+    int oY = (int) cY * 0.25;
+    moveX += (1 * oX);
+    moveY += (1 * oY);
   if(moveY == 192 && moveX > 227 && moveX < 500) { 
     gameOver(0); //reached landing pad;
     return;
+  }
+  
+  if(moveY > 0) {
+    moveY -= g;
+    
+  }
+
+  thrust(moveX,moveY);
 }
+
+
+void gravitySimulator(void) {
+  
+ 
+  if(moveY == 192 && moveX > 227 && moveX < 500) { 
+    gameOver(0); //reached landing pad;
+    return;
+  }
   
   if(moveY > 0) {
     moveY -= g;
     thrust(moveX,moveY);
   }
-  else
-    thrust(moveX, moveY);        //BASICALLY thrust is the refresh function to plot time change and also move the lander
+  // else{
+  
+    
+  //   thrust(moveX, moveY);
+    
+  // }
+
+    //BASICALLY thrust is the refresh function to plot time change and also move the lander
  
 }
 
@@ -206,8 +259,10 @@ void gravitySimulator(void) {
 
 
 
+
+
 void timer(int value) {
-  timeR--;
+  timeR;
   if(value > 0)
     glutTimerFunc(1000, timer, timeR);
   else
@@ -224,7 +279,8 @@ void drawLunarLanding(void)
   drawTerrain();
   drawFuelBar(fuel);
   glutSwapBuffers();
-  glutIdleFunc(gravitySimulator);
+  // glutIdleFunc(gravitySimulator);
+  glutIdleFunc(myController);
   glutTimerFunc(0,timer,30);
  
  
@@ -236,9 +292,10 @@ int main(int argc, char** argv)
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); // set display mode 
   glutInitWindowSize(640,480); // set window size glutInitWindowPosition(100, 150); // set window position on screen 
   glutCreateWindow("Lab1-Task1"); // open the screen window
-  glutKeyboardFunc(myKeyboard);
   glutDisplayFunc(drawLunarLanding); // register redraw function
   myInit();
   glutMainLoop();
+  
+
   return 0;
 }

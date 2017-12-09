@@ -21,7 +21,7 @@
 # COURSE    current course you are in
 ##############################################################################
 EXEC   	  = terrain
-SRC_FILES = terrain.cpp pixmap.cpp quaternion.cpp
+SRC_FILES = terrain.cpp pixmap.cpp
 INC_FILES = $(SRC_FILES:%.cpp=%.h)
 ARCH	  = ACPUB
 COURSE	  = cps124
