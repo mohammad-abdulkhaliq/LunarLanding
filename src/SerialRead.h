@@ -9,9 +9,9 @@ int set_port(void);
 const char* read_port(int fd);
 int readPosY(const char* line);
 int readPosX(const char* line);
-int readGyroX(const char* line);
-int readGyroY(const char* line);
-int readGyroZ(const char* line);
-int readAccelX(const char* line);
-int readAccelY(const char* line);
-int readAccelZ(const char* line);
+/* int readGyroX(const char* line); */
+/* int readGyroY(const char* line); */
+/* int readGyroZ(const char* line); */
+/* int readAccelX(const char* line); */
+/* int readAccelY(const char* line); */
+/* int readAccelZ(const char* line); */
