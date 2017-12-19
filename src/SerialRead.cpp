@@ -5,6 +5,13 @@
 #include <errno.h>   /* Error number definitions */
 #include <termios.h> /* POSIX terminal control definitions */
 #include <stdlib.h>
+#include <iostream>
+using namespace std;
+
+int totX = 1;
+int totY = 1;
+int prevX = 0;
+int prevY = 0;
 
 inline void str_split(char *str, char delim) { 
   char *p = str; 
@@ -17,13 +24,14 @@ inline void str_split(char *str, char delim) {
 // SET INPUT PORT FOR ARDUINO CONTROLLER INTERFACE
 int set_port(void)
 {
-  int fd = open("/dev/ttyACM0", O_RDONLY | O_NOCTTY);
+  int fd = open("/dev/ttyACM0",O_RDWR| O_NONBLOCK | O_NDELAY );
   return fd;
 }
 // READ 32 CHARACTER BUFFER FROM SERIAL PORT
 // THROW AWAY INVALID LINES
 const char* read_port(int fd)
 {
+  tcflush(fd,TCIOFLUSH);
   static char buffer[32];
   char buf = '\0';
   int n = 0;
@@ -55,6 +63,7 @@ int readPosX(const char* line)
    char *dir;
    char *val;
    int vali;
+   int rAvg;
    char *search = " ";
    char *ptr = const_cast<char*> (line);
    char lArr [32];
@@ -64,14 +73,22 @@ int readPosX(const char* line)
    dir = strtok (NULL,":");
    val = strtok(NULL,":");
    if(strcmp(sens, "P") == 0 && strcmp(dir, "X") == 0) {
-     
-     // if(val != NULL) {
-     vali = strtol(val, NULL, 10);
+     vali = atoi(val);
+     // if(totX == 100) {
+     //   totX = 1;
+     //   prevX = 0;
      // }
-     // else
-     //   return -1000;
+     
+     // rAvg = (vali + prevX) / totX;
+     // totX++;
+     // prevX = vali;
+     
+     return vali;
+    
     
    }
+
+   return -10000;
 
 }
 
@@ -83,6 +100,7 @@ int readPosY(const char* line)
   char *dir;
   char *val;
   int vali;
+  int rAvg;
   char *search = " ";
   char *ptr = const_cast<char*> (line);
   char lArr [32];
@@ -92,12 +110,22 @@ int readPosY(const char* line)
   dir = strtok (NULL,":");
   val = strtok(NULL,":");
   if(strcmp(sens, "P") == 0 && strcmp(dir, "Y") == 0) { 
-  
-     // if(val != NULL)
-    vali = (int) strtol(val,NULL,10);
-     // else
-       // return -1;
+    vali = stoi(val);
+     // if(totY == 10) {
+     //   totY = 1;
+     //   prevY = 0;
+     // }
+       
+     // rAvg = (vali + prevY) / totY;
+     // totY++;
+     // prevY = vali;
+     
+     
+     return vali;
+       
    }
+
+  return -10000;
 
 }
 
@@ -114,20 +142,16 @@ int readPosY(const char* line)
 //     if(pos != NULL) { 
 //      x = readPosX(pos);
 //      y = readPosY(pos);
-//      printf("CX: %d\n", x);
-//      printf("CY: %d\n", y);
-//     }
-//       // x = readPosX(pos);
-//       // y = readPosY(pos);
-//       // if(x > 0)
-//       	// printf("CX: %d \n", x);
-//       // if(y > 0)
-//       // 	printf("CY: %d \n", y);
+
+//      if(x != -10000)
+//        printf("CX: %d\n", x);
      
-      
-//       // printf("CY: %d\n", y);
-      
 //     }
+     
+//      // printf("CY: %d\n", y);
+//     }
+   
+    
    
    
    

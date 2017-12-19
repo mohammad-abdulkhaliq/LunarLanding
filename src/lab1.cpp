@@ -16,11 +16,11 @@
 #include <stdio.h>
 #include <GL/glut.h>
 #include "SerialRead.h"
-
+#include <thread>         // std::thread
 //<<<<<<<<<<<<<<<<<<<<<<< myInit >>>>>>>>>>>>>>>>>>>>
 int moveX = 600; int moveY = 2000;
 int speed = 25;
-int g = 2;
+int g = 1;
 int timeR = 30;
 int fuel = 100;
 bool over = false;
@@ -28,6 +28,7 @@ int fd = 0;
 double cX = 0;
 double cY = 0;
 const char* cPos;
+int INVALID = -10000;
 
 void myInit(void)
 {
@@ -113,14 +114,14 @@ void printCoords(void){
   std::stringstream coords;
   coords << "x: " << moveX << ", y: " << moveY;
   char *o = const_cast<char*>(coords.str().c_str());
-  std::stringstream controller;
-  controller << "cx: " << cX << ", cy: " << cY;
-  char *o3 = const_cast<char*>(controller.str().c_str());
+  // std::stringstream controller;
+  // controller << "cx: " << cX << ", cy: " << cY;
+  // char *o3 = const_cast<char*>(controller.str().c_str());
   std::stringstream time;
   time << "time remaining: " << timeR;
   char *o2 = const_cast<char*>(time.str().c_str());
   output(530,400,0.1, o);
-  output(530,380,0.1, o3);
+  // output(530,380,0.1, o3);
   output(10, 390, 0.1, o2 );
 }
 
@@ -206,17 +207,7 @@ void renderString(char string [])
 
 void myController(void) {
 
-    cPos = read_port(fd);
-    while(cPos == NULL) 
-      cPos = read_port(fd);
-    // printf("%s", cPos);
-    cX = readPosX(cPos);
-    cY = readPosY(cPos);
-    
-    int oX = (int) cX * 0.25;
-    int oY = (int) cY * 0.25;
-    moveX += (1 * oX);
-    moveY += (1 * oY);
+  
   if(moveY == 192 && moveX > 227 && moveX < 500) { 
     gameOver(0); //reached landing pad;
     return;
@@ -230,6 +221,33 @@ void myController(void) {
   thrust(moveX,moveY);
 }
 
+void readController(int value) {
+
+  
+    cPos = read_port(fd);
+   
+    double cXold = cX;
+    double cYold = cY;
+    cX = readPosX(cPos);
+    cY = readPosY(cPos);
+
+    if(cX != INVALID) { 
+       int oX = (int) cX * 0.75;
+       moveX += (1 * oX);
+       if(cX > 10 || cX < -10)
+	 fuel-=0.1; if(fuel==0) gameOver(2);
+    }
+
+    if(cY != INVALID) { 
+      int oY = (int) cY * 0.75;
+      moveY += (1 * oY);
+      if(cY > 10 || cY < -10)
+	fuel-=0.1; if(fuel==0) gameOver(2);
+    }
+    if(!over)
+      glutTimerFunc(100, readController, 1);
+
+}
 
 void gravitySimulator(void) {
   
@@ -243,12 +261,12 @@ void gravitySimulator(void) {
     moveY -= g;
     thrust(moveX,moveY);
   }
-  // else{
+  else{
   
     
-  //   thrust(moveX, moveY);
+    thrust(moveX, moveY);
     
-  // }
+  }
 
     //BASICALLY thrust is the refresh function to plot time change and also move the lander
  
@@ -262,7 +280,7 @@ void gravitySimulator(void) {
 
 
 void timer(int value) {
-  timeR;
+  timeR--;
   if(value > 0)
     glutTimerFunc(1000, timer, timeR);
   else
@@ -279,9 +297,10 @@ void drawLunarLanding(void)
   drawTerrain();
   drawFuelBar(fuel);
   glutSwapBuffers();
-  // glutIdleFunc(gravitySimulator);
-  glutIdleFunc(myController);
+  glutIdleFunc(gravitySimulator);
+  // glutIdleFunc(myController);
   glutTimerFunc(0,timer,30);
+  glutTimerFunc(1,readController,1);
  
  
 }
@@ -290,9 +309,10 @@ int main(int argc, char** argv)
 {
   glutInit(&argc, argv); // initialize the toolkit 
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); // set display mode 
-  glutInitWindowSize(640,480); // set window size glutInitWindowPosition(100, 150); // set window position on screen 
-  glutCreateWindow("Lab1-Task1"); // open the screen window
+  glutInitWindowSize(800,600); // set window size glutInitWindowPosition(100, 150); // set window position on screen 
+  glutCreateWindow("Game"); // open the screen window
   glutDisplayFunc(drawLunarLanding); // register redraw function
+  // std::thread first (readController); 
   myInit();
   glutMainLoop();
   
